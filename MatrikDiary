@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eisenhower Matrix Interaktif</title>
+    <!-- Tailwind CSS untuk Desain Modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Library untuk Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-blue-100 text-gray-800 font-sans min-h-screen p-4 sm:p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-indigo-700 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-list-check"></i> Eisenhower Matrix Interaktif
+            </h1>
+            <p class="text-gray-600 mt-2">Atur prioritas tugas berdasarkan tingkat Urgensi dan Kepentingan Anda.</p>
+        </header>
+
+        <!-- Form Tambah Tugas -->
+        <div class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-gray-100">
+            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-plus-circle text-indigo-600"></i> Tambah Tugas Baru
+            </h2>
+            <!-- Grid diubah menjadi 5 kolom (lg:grid-cols-5) agar muat untuk waktu mulai & akhir -->
+            <form id="taskForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Nama Tugas</label>
+                    <input type="text" id="taskTitle" required placeholder="Contoh: Selesaikan Laporan" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <!-- Input Waktu Mulai -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Waktu Mulai</label>
+                    <input type="datetime-local" id="taskStartDate" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <!-- Input Waktu Akhir -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Waktu Akhir (Tenggat)</label>
+                    <input type="datetime-local" id="taskEndDate" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Kuadran</label>
+                    <select id="taskQuadrant" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="q1">Q1: Lakukan Sekarang</option>
+                        <option value="q2">Q2: Jadwalkan</option>
+                        <option value="q3">Q3: Delegasikan</option>
+                        <option value="q4">Q4: Hapus / Abaikan</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-save"></i> Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tombol Ekspor & Bagikan -->
+        <div class="flex flex-wrap gap-3 mb-8 justify-end">
+            <button onclick="exportToPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition">
+                <i class="fa-solid fa-file-pdf"></i> Export PDF
+            </button>
+            <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition">
+                <i class="fa-solid fa-file-excel"></i> Export Excel (CSV)
+            </button>
+            <button onclick="shareToWhatsApp()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </button>
+            <button onclick="shareToEmail()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition">
+                <i class="fa-solid fa-envelope"></i> Email
+            </button>
+        </div>
+
+        <!-- Matriks 4 Kuadran -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Q1: DO -->
+            <div class="bg-red-50 border-l-4 border-red-500 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-red-700 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-fire"></i> Q1: Lakukan Sekarang
+                        </h3>
+                        <span class="text-xs bg-red-200 text-red-800 font-bold px-2.5 py-1 rounded-full">Penting & Mendesak</span>
+                    </div>
+                    <p class="text-xs text-red-600 mb-4">Krisis, deadline ketat, masalah mendesak.</p>
+                    <div id="q1-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- Q2: DECIDE/SCHEDULE -->
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-amber-700 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-days"></i> Q2: Jadwalkan
+                        </h3>
+                        <span class="text-xs bg-amber-200 text-amber-800 font-bold px-2.5 py-1 rounded-full">Penting, Tidak Mendesak</span>
+                    </div>
+                    <p class="text-xs text-amber-600 mb-4">Pengembangan diri, olahraga, perencanaan.</p>
+                    <div id="q2-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- Q3: DELEGATE -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-blue-700 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-users"></i> Q3: Delegasikan
+                        </h3>
+                        <span class="text-xs bg-blue-200 text-blue-800 font-bold px-2.5 py-1 rounded-full">Tidak Penting, Mendesak</span>
+                    </div>
+                    <p class="text-xs text-blue-600 mb-4">Interupsi, panggilan telepon, rapat tertentu.</p>
+                    <div id="q3-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- Q4: DELETE -->
+            <div class="bg-gray-100 border-l-4 border-gray-400 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-gray-700 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-trash-can"></i> Q4: Hapus / Jangan Lakukan
+                        </h3>
+                        <span class="text-xs bg-gray-200 text-gray-700 font-bold px-2.5 py-1 rounded-full">Tidak Penting & Tidak Mendesak</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">Distraksi, buang-buang waktu berlebihan.</p>
+                    <div id="q4-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Aplikasi -->
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('eisenhower_tasks')) || [];
+
+        const taskForm = document.getElementById('taskForm');
+        const taskTitleInput = document.getElementById('taskTitle');
+        const taskStartDateInput = document.getElementById('taskStartDate');
+        const taskEndDateInput = document.getElementById('taskEndDate');
+        const taskQuadrantSelect = document.getElementById('taskQuadrant');
+
+        const notificationSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+        function formatDateTimeDisplay(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            return dateTimeStr.replace('T', ' '); 
+        }
+
+        // Helper untuk menghasilkan teks tampilan waktu (mendukung data lama)
+        function getTaskTimeRange(task) {
+            if (task.startDate && task.endDate) {
+                return `${formatDateTimeDisplay(task.startDate)} s/d ${formatDateTimeDisplay(task.endDate)}`;
+            } else if (task.date) { // Fallback untuk tugas versi sebelumnya
+                return `Tenggat: ${formatDateTimeDisplay(task.date)}`;
+            }
+            return 'Tanpa Waktu';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            checkH1Reminders(true);
+        });
+
+        // Tambah Tugas
+        taskForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validasi: Waktu Akhir tidak boleh lebih kecil dari Waktu Mulai
+            if (new Date(taskEndDateInput.value) < new Date(taskStartDateInput.value)) {
+                alert("Waktu Akhir tidak boleh lebih awal dari Waktu Mulai!");
+                return;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                title: taskTitleInput.value,
+                startDate: taskStartDateInput.value,
+                endDate: taskEndDateInput.value,
+                quadrant: taskQuadrantSelect.value,
+                completed: false
+            };
+
+            tasks.push(newTask);
+            saveAndRender();
+            taskForm.reset();
+            
+            checkH1Reminders(false);
+        });
+
+        function saveAndRender() {
+            localStorage.setItem('eisenhower_tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        function renderTasks() {
+            ['q1', 'q2', 'q3', 'q4'].forEach(q => {
+                document.getElementById(`${q}-list`).innerHTML = '';
+            });
+
+            tasks.forEach(task => {
+                const listContainer = document.getElementById(`${task.quadrant}-list`);
+                if (!listContainer) return;
+
+                const taskCard = document.createElement('div');
+                taskCard.className = `bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between gap-2 transition ${task.completed ? 'opacity-50 line-through bg-gray-50' : ''}`;
+                
+                const timeText = getTaskTimeRange(task);
+
+                taskCard.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleTask(${task.id})" class="w-4 h-4 text-indigo-600 rounded cursor-pointer min-w-[16px]">
+                        <div class="truncate">
+                            <p class="text-sm font-semibold text-gray-800 truncate">${escapeHTML(task.title)}</p>
+                            <p class="text-xs text-gray-500"><i class="fa-regular fa-clock"></i> ${timeText}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-gray-400 hover:text-red-600 p-1 transition" title="Hapus Tugas">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                listContainer.appendChild(taskCard);
+            });
+        }
+
+        // Pengingat H-1 dihitung dari Waktu Akhir (Tenggat)
+        function checkH1Reminders(isInitialLoad) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let h1Tasks = [];
+
+            tasks.forEach(task => {
+                // Gunakan endDate, atau fallback ke date untuk data lama
+                const targetDateStr = task.endDate || task.date; 
+                
+                if (!task.completed && targetDateStr) {
+                    const taskDate = new Date(targetDateStr);
+                    taskDate.setHours(0, 0, 0, 0);
+
+                    const diffTime = taskDate - today;
+                    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+                    if (diffDays === 1) {
+                        const targetTime = formatDateTimeDisplay(targetDateStr).split(' ')[1] || '-';
+                        h1Tasks.push(`${task.title} (Batas Akhir: ${targetTime})`);
+                    }
+                }
+            });
+
+            if (h1Tasks.length > 0) {
+                notificationSound.play().catch(error => {
+                    if (isInitialLoad) {
+                        console.log("Suara otomatis diblokir oleh browser sampai pengguna berinteraksi.");
+                    }
+                });
+                alert(`Pengingat H-1! Anda memiliki ${h1Tasks.length} tugas yang tenggat waktunya BESOK:\n\n- ` + h1Tasks.join('\n- '));
+            }
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? {...t, completed: !t.completed} : t);
+            saveAndRender();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveAndRender();
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Ekspor ke PDF
+        function exportToPDF() {
+            if (tasks.length === 0) {
+                alert('Belum ada tugas untuk diexport ke PDF!');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.text("Daftar Tugas - Eisenhower Matrix", 14, 15);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            
+            const todayDate = new Date().toLocaleDateString('id-ID');
+            doc.text(`Dicetak pada: ${todayDate}`, 14, 22);
+
+            // Kolom Jadwal digabung agar muat di PDF
+            const tableColumn = ["Judul Tugas", "Jadwal Waktu (Mulai - Akhir)", "Kuadran", "Status"];
+            const tableRows = [];
+
+            tasks.forEach(t => {
+                let qName = {q1: "Q1: Do", q2: "Q2: Schedule", q3: "Q3: Delegate", q4: "Q4: Delete"}[t.quadrant];
+                let status = t.completed ? "Selesai" : "Belum Selesai";
+                let schedule = getTaskTimeRange(t);
+                
+                tableRows.push([t.title, schedule, qName, status]);
+            });
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 28,
+                theme: 'striped',
+                headStyles: { fillColor: [79, 70, 229] },
+                styles: { fontSize: 9 }
+            });
+
+            doc.save("Daftar_Tugas_Eisenhower.pdf");
+        }
+
+        // Ekspor ke Excel (Format CSV)
+        function exportToExcel() {
+            if (tasks.length === 0) {
+                alert('Belum ada tugas untuk diexport!');
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,Judul Tugas,Waktu Mulai,Waktu Akhir,Kuadran,Status\n";
+            tasks.forEach(t => {
+                let qName = {q1: "Q1: Do", q2: "Q2: Schedule", q3: "Q3: Delegate", q4: "Q4: Delete"}[t.quadrant];
+                let status = t.completed ? "Selesai" : "Belum Selesai";
+                let start = t.startDate ? formatDateTimeDisplay(t.startDate) : (t.date ? formatDateTimeDisplay(t.date) : '-');
+                let end = t.endDate ? formatDateTimeDisplay(t.endDate) : (t.date ? formatDateTimeDisplay(t.date) : '-');
+                
+                csvContent += `"${t.title}","${start}","${end}","${qName}","${status}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "eisenhower_matrix.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Bagikan ke WhatsApp
+        function shareToWhatsApp() {
+            if (tasks.length === 0) {
+                alert('Belum ada tugas untuk dibagikan!');
+                return;
+            }
+            let text = "*📋 EISENHOWER MATRIX SAYA*\n\n";
+            ['q1', 'q2', 'q3', 'q4'].forEach(q => {
+                let qTitle = {q1: "🔥 Q1: Lakukan Sekarang", q2: "📅 Q2: Jadwalkan", q3: "👥 Q3: Delegasikan", q4: "🗑️ Q4: Hapus"}[q];
+                let qTasks = tasks.filter(t => t.quadrant === q);
+                
+                text += `*${qTitle}*\n`;
+                if (qTasks.length === 0) {
+                    text += "- (Kosong)\n\n";
+                } else {
+                    qTasks.forEach(t => {
+                        let statusIcon = t.completed ? "✅" : "⏳";
+                        text += `- ${statusIcon} ${t.title} (${getTaskTimeRange(t)})\n`;
+                    });
+                    text += "\n";
+                }
+            });
+
+            const encoded = encodeURIComponent(text);
+            window.open(`https://wa.me/?text=${encoded}`, '_blank');
+        }
+
+        // Kirim via Email
+        function shareToEmail() {
+            if (tasks.length === 0) {
+                alert('Belum ada tugas untuk dikirim!');
+                return;
+            }
+            let subject = encodeURIComponent("Daftar Tugas - Eisenhower Matrix");
+            let body = "Berikut adalah daftar tugas saya berdasarkan Eisenhower Matrix:\n\n";
+            
+            tasks.forEach(t => {
+                let status = t.completed ? "[Selesai]" : "[Belum]";
+                body += `- ${t.title} | Waktu: ${getTaskTimeRange(t)} | Kuadran: ${t.quadrant.toUpperCase()} ${status}\n`;
+            });
+
+            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        }
+    </script>
+</body>
+</html>
